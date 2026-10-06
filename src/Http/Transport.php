@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ux2Dev\GpsBulgaria\Http;
 
+use Closure;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
@@ -33,21 +34,47 @@ final class Transport
 
     private const EXCERPT_LENGTH = 500;
 
+    /** @var Closure(int): void */
+    private Closure $sleep;
+
+    /** @param (Closure(int): void)|null $sleep Receives milliseconds; defaults to usleep. */
     public function __construct(
         private readonly GpsBulgariaConfig $config,
         private readonly ClientInterface $httpClient,
         private readonly RequestFactoryInterface $requestFactory,
         private readonly StreamFactoryInterface $streamFactory,
-    ) {}
+        ?Closure $sleep = null,
+    ) {
+        $this->sleep = $sleep ?? static function (int $ms): void {
+            usleep($ms * 1000);
+        };
+    }
 
     /**
+     * Retries GET requests on 503 / transport failure per the configured
+     * RetryPolicy. POST is never retried: createZone is not idempotent.
+     *
      * @param  array<string, scalar|DateTimeInterface|null>  $query
      * @param  array<mixed>|null  $body
      * @return array<mixed>
      */
     public function request(string $method, string $path, array $query = [], ?array $body = null): array
     {
-        return $this->send($method, $path, $query, $body);
+        $policy = $this->config->retry;
+        $retryable = strtoupper($method) === 'GET';
+
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                return $this->send($method, $path, $query, $body);
+            } catch (ServiceUnavailableException|TransportException $e) {
+                if (! $retryable || $attempt >= $policy->maxAttempts) {
+                    throw $e;
+                }
+
+                $retryAfter = $e instanceof ServiceUnavailableException ? $e->retryAfterSeconds : null;
+                ($this->sleep)($policy->delayFor($attempt, $retryAfter));
+            }
+        }
     }
 
     /**
