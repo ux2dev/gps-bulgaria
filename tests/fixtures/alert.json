@@ -1,0 +1,25 @@
+{
+    "eventID": "6b1e9c2a-f1cd-4748-9d6a-4f7a6e9b2c21",
+    "objectID": "14574",
+    "reason": "Speeding in an urban area",
+    "definitionID": "def-urban-speeding",
+    "triggeredAt": "2026-09-09T14:44:38Z",
+    "clearedAt": null,
+    "sensorData": {"speed": "96", "speed_limit": "50", "road_topology": "urban", "km": "46371.8"},
+    "rules": {
+        "trigger": {
+            "durationSeconds": 60,
+            "rules": {
+                "op": "AND",
+                "children": [
+                    {"op": "GT", "field": "speed", "primitive": "double", "value": 90},
+                    {"op": "EQ", "field": "road_topology", "primitive": "string", "value": "urban"}
+                ]
+            }
+        },
+        "clear": {
+            "durationSeconds": 0,
+            "rules": {"op": "LTE", "field": "speed", "primitive": "double", "value": 90}
+        }
+    }
+}
