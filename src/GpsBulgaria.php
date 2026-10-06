@@ -50,12 +50,12 @@ final class GpsBulgaria
 
     public function zones(): ZonesResource
     {
-        return $this->zones ??= new ZonesResource;
+        return $this->zones ??= new ZonesResource($this->transport);
     }
 
     /** @experimental The alerts API is not yet live upstream. */
     public function alerts(): AlertsResource
     {
-        return $this->alerts ??= new AlertsResource;
+        return $this->alerts ??= new AlertsResource($this->transport);
     }
 }
