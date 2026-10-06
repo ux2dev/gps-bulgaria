@@ -1,0 +1,59 @@
+{
+    "name": "ux2dev/gps-bulgaria",
+    "description": "Framework-agnostic PHP SDK for the GPS Bulgaria IoT API (iot.gps.bg)",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["gps", "gps-bulgaria", "fleet", "telematics", "iot", "sdk", "laravel"],
+    "require": {
+        "php": "^8.3",
+        "ext-json": "*",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^4.0",
+        "guzzlehttp/guzzle": "^7.9",
+        "orchestra/testbench": "^10.0|^11.0",
+        "symfony/yaml": "^7.0|^8.0",
+        "phpstan/phpstan": "^2.1",
+        "laravel/pint": "^1.18"
+    },
+    "suggest": {
+        "guzzlehttp/guzzle": "Supplies a PSR-18 client and PSR-17 factories out of the box",
+        "illuminate/support": "^12.0|^13.0 for the Laravel integration"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ux2Dev\\GpsBulgaria\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ux2Dev\\GpsBulgaria\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ux2Dev\\GpsBulgaria\\Laravel\\GpsBulgariaServiceProvider"
+            ],
+            "aliases": {
+                "GpsBulgaria": "Ux2Dev\\GpsBulgaria\\Laravel\\Facades\\GpsBulgaria"
+            }
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "test:coverage": "XDEBUG_MODE=coverage pest --coverage --min=100",
+        "test:live": "pest --group=live",
+        "lint": "pint --test",
+        "stan": "phpstan analyse"
+    },
+    "minimum-stability": "stable",
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
