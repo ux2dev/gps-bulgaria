@@ -97,3 +97,47 @@ it('validates bare JSON arrays of objects', function () {
     expect(fn () => Data::rows([1, 2], 'GpsObject'))
         ->toThrow(InvalidResponseException::class, 'GpsObject: expected a JSON array of objects');
 });
+
+it('reads objects and rejects other types', function () {
+    expect(Data::object(['k' => ['a' => 1]], 'k', 'T'))->toBe(['a' => 1])
+        ->and(Data::nullableObject(['k' => ['a' => 1]], 'k', 'T'))->toBe(['a' => 1]);
+
+    expect(fn () => Data::object(['k' => 'x'], 'k', 'T'))
+        ->toThrow(InvalidResponseException::class, "T: field 'k' must be object, got string");
+    expect(fn () => Data::nullableObject(['k' => 'x'], 'k', 'T'))
+        ->toThrow(InvalidResponseException::class, "T: field 'k' must be object, got string");
+});
+
+it('rejects a wrong-typed nullable number and a present nullable date-time with a wrong type', function () {
+    expect(fn () => Data::nullableFloat(['k' => 'x'], 'k', 'T'))
+        ->toThrow(InvalidResponseException::class, "T: field 'k' must be number, got string");
+    expect(fn () => Data::nullableDateTime(['k' => 5], 'k', 'T'))
+        ->toThrow(InvalidResponseException::class, "T: field 'k' must be string, got int");
+});
+
+it('parses a present nullable date-time', function () {
+    expect(Data::nullableDateTime(['k' => '2026-09-09T14:44:38Z'], 'k', 'T')?->format(DATE_ATOM))
+        ->toBe('2026-09-09T14:44:38+00:00');
+});
+
+it('rejects a date-time that matches the pattern but is not a real instant', function () {
+    expect(fn () => Data::dateTime(['t' => '2026-13-45T25:61:61Z'], 't', 'T'))
+        ->toThrow(InvalidResponseException::class, "T: field 't' is not an RFC 3339 date-time");
+});
+
+it('rejects containers of the wrong shape', function () {
+    expect(fn () => Data::stringMap(['m' => 'x'], 'm', 'T'))
+        ->toThrow(InvalidResponseException::class, "T: field 'm' must be a map of strings");
+    expect(fn () => Data::stringList(['l' => 'x'], 'l', 'T'))
+        ->toThrow(InvalidResponseException::class, "T: field 'l' must be a list of strings");
+    expect(fn () => Data::stringList(['l' => ['a' => 'b']], 'l', 'T'))
+        ->toThrow(InvalidResponseException::class, "T: field 'l' must be a list of strings");
+    expect(fn () => Data::objects(['p' => 'x'], 'p', 'T', fn (array $r) => $r))
+        ->toThrow(InvalidResponseException::class, "T: field 'p' must be a list of objects");
+    expect(fn () => Data::objects(['p' => ['a' => []]], 'p', 'T', fn (array $r) => $r))
+        ->toThrow(InvalidResponseException::class, "T: field 'p' must be a list of objects");
+});
+
+it('uses a present value over the bool default', function () {
+    expect(Data::bool(['b' => true], 'b', 'T', false))->toBeTrue();
+});

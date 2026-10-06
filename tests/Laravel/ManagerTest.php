@@ -100,3 +100,21 @@ it('maps the tenant retry setting onto the config', function () {
 
     expect($config->retry->maxAttempts)->toBe(4)->and($config->timeout)->toBe(12);
 });
+
+it('uses default timeout, retry and base URL when the settings are not usable', function () {
+    $m = manager(new FakeHttpClient, ['default' => 42, 'tenants' => 'nope']);
+    $config = (new ReflectionMethod($m, 'configFor'))->invoke($m, ['api_key' => 'k', 'base_url' => '', 'timeout' => 'abc', 'retry' => 'abc']);
+
+    expect($m->currentTenant())->toBe('main')
+        ->and($config->baseUrl)->toBe('https://iot.gps.bg/api/v2')
+        ->and($config->timeout)->toBe(30)
+        ->and($config->retry->maxAttempts)->toBe(1)
+        ->and(fn () => $m->client())->toThrow(ConfigurationException::class, 'tenant "main" is not configured');
+});
+
+it('lets forKey ignore a malformed tenants entry', function () {
+    $http = new FakeHttpClient([FakeHttpClient::json(200, [])]);
+    manager($http, ['tenants' => 'nope'])->forKey('k')->objects()->list();
+
+    expect($http->captured[0]->getHeaderLine('X-API-Key'))->toBe('k');
+});

@@ -57,3 +57,10 @@ it('marks a cleared alert inactive', function () {
 
     expect(Alert::fromArray($data)->isActive())->toBeFalse();
 });
+
+it('rejects an unknown condition primitive and a nested list value', function () {
+    expect(fn () => ConditionNode::fromArray(['op' => 'EQ', 'primitive' => 'decimal']))
+        ->toThrow(InvalidResponseException::class, "ConditionNode: field 'primitive' has unknown ConditionPrimitive value 'decimal'");
+    expect(fn () => ConditionNode::fromArray(['op' => 'EQ', 'value' => [1, [2]]]))
+        ->toThrow(InvalidResponseException::class, "ConditionNode: field 'value' must be a scalar or a list of scalars");
+});

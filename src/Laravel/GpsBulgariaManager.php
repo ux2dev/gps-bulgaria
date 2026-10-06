@@ -117,11 +117,14 @@ final class GpsBulgariaManager
         $requestFactory = $this->requestFactory ?? $factory;
         $streamFactory = $this->streamFactory ?? $factory;
 
+        // Unreachable while guzzlehttp/guzzle is installed (it is a dev dependency).
+        // @codeCoverageIgnoreStart
         if ($httpClient === null || $requestFactory === null || $streamFactory === null) {
             throw new ConfigurationException(
                 'No PSR-18 client / PSR-17 factories available: install guzzlehttp/guzzle or bind them in the container',
             );
         }
+        // @codeCoverageIgnoreEnd
 
         return new GpsBulgaria($config, $httpClient, $requestFactory, $streamFactory);
     }

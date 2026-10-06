@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
+use GuzzleHttp\Psr7\HttpFactory;
+use Ux2Dev\GpsBulgaria\Config\GpsBulgariaConfig;
+use Ux2Dev\GpsBulgaria\Config\RetryPolicy;
 use Ux2Dev\GpsBulgaria\Exception\InvalidResponseException;
 use Ux2Dev\GpsBulgaria\Exception\TransportException;
+use Ux2Dev\GpsBulgaria\Http\Transport;
 use Ux2Dev\GpsBulgaria\Tests\Support\FakeHttpClient;
 
 it('sends a GET with the API key and JSON accept header', function () {
@@ -71,4 +75,25 @@ it('wraps PSR-18 failures in TransportException with the original as previous', 
         expect($e->getMessage())->toBe('GPS Bulgaria request failed: connection refused')
             ->and($e->getPrevious())->toBe($inner);
     }
+});
+
+it('rejects a body that cannot be encoded as JSON before sending', function () {
+    $http = new FakeHttpClient;
+
+    expect(fn () => transport($http)->request('POST', '/zones', [], ['bad' => "\xB1\x31"]))
+        ->toThrow(InvalidArgumentException::class, 'Request body cannot be encoded as JSON');
+    expect($http->captured)->toBe([]);
+});
+
+it('sleeps with usleep by default between retries', function () {
+    $http = new FakeHttpClient([
+        FakeHttpClient::json(503, ['code' => 'SERVICE_UNAVAILABLE', 'message' => 'x']),
+        FakeHttpClient::json(200, [['ok' => 1]]),
+    ]);
+    $factory = new HttpFactory;
+    $config = new GpsBulgariaConfig('k', retry: new RetryPolicy(2, 0, 0));
+
+    $result = (new Transport($config, $http, $factory, $factory))->request('GET', '/objects');
+
+    expect($result)->toBe([['ok' => 1]])->and($http->captured)->toHaveCount(2);
 });
