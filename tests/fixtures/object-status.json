@@ -1,0 +1,10 @@
+{
+    "objectID": "14574",
+    "objectName": "Renault Clio",
+    "lastUpdate": "2026-09-09T14:44:38Z",
+    "location": {"latitude": 42.691143, "longitude": 23.352829, "angle": 89},
+    "sensorData": {
+        "altitude": "553", "key": "key_off", "km": "46371.8", "road_topology": "urban",
+        "speed": "0", "speed_limit": "0", "total_odometer": "46371.800"
+    }
+}

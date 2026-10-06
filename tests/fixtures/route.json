@@ -1,0 +1,18 @@
+{
+    "objectID": "14574",
+    "startedAt": "2026-08-01T07:10:00Z",
+    "endedAt": "2026-08-01T08:02:13Z",
+    "startAddress": "1 Vitosha Blvd, Sofia",
+    "endAddress": "25 Tsarigradsko Shose, Sofia",
+    "startPoint": {"eventTs": "2026-08-01T07:10:00Z", "latitude": 42.6977, "longitude": 23.3219},
+    "endPoint": {"eventTs": "2026-08-01T08:02:13Z", "latitude": 42.6629, "longitude": 23.3815},
+    "aggregations": {
+        "mileage": "42.7", "duration": "3133", "duration_moving": "2900", "duration_idle": "233",
+        "speed_max": "96", "speed_avg": "49.1", "odometer_at_start": "46329.1", "odometer_at_end": "46371.8",
+        "fuel_level_at_start": "61", "fuel_level_at_end": "57"
+    },
+    "dataPoints": [
+        {"eventTs": "2026-08-01T07:12:44Z", "latitude": 42.6977, "longitude": 23.3219},
+        {"latitude": 42, "longitude": 23}
+    ]
+}
