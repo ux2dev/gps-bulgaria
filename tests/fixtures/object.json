@@ -1,0 +1,12 @@
+{
+    "objectID": "14574",
+    "objectType": "Vehicle",
+    "name": "Renault Clio",
+    "comment": "Priority delivery unit",
+    "tags": ["fleet", "europe"],
+    "parameters": [
+        {"id": 1, "name": "brand", "value": "Renault"},
+        {"id": 2, "name": "model", "value": "Clio"},
+        {"id": 3, "name": "license plate", "value": "CA0000CA"}
+    ]
+}

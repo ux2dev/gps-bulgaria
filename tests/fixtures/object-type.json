@@ -1,0 +1,8 @@
+{
+    "name": "Vehicle",
+    "parameters": [
+        {"id": 1, "name": "brand", "type": "string", "required": true, "readOnly": false, "values": ["Renault", "Peugeot", "Ford"]},
+        {"id": 2, "name": "model", "type": "string", "required": true, "readOnly": false},
+        {"id": 3, "name": "license plate", "type": "string", "required": false, "readOnly": false}
+    ]
+}
