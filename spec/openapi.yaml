@@ -1,0 +1,1259 @@
+openapi: 3.0.3
+info:
+  title: GPS IoT
+  version: '2.0'
+  x-logo:
+    url: https://gps.bg/fm/images/gps-logo.png
+servers:
+  - url: https://iot.gps.bg/api/v2
+paths:
+  /objects:
+    get:
+      tags:
+        - objects
+      operationId: listObjects
+      summary: List objects
+      description: >-
+        Returns your objects, each with its identifier, type, tags and
+        parameter values.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Objects'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+  /objects/{objectID}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - objects
+      operationId: getObject
+      summary: Retrieve a single object
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Object'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+  /object-types:
+    get:
+      tags:
+        - object-types
+      operationId: listObjectTypes
+      summary: List object types
+      description: >-
+        Returns the available object types. Each lists its parameters, their
+        type, and whether they are required or read-only.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectTypes'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+  /objects/statuses:
+    get:
+      tags:
+        - objects
+      operationId: listObjectStatuses
+      summary: Get status for all objects
+      description: >-
+        Returns the latest known position and sensor readings for each of your
+        objects.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectStatuses'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+  /objects/{objectID}/status:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - objects
+      operationId: getObjectStatus
+      summary: Get status for a specific object
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectStatus'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+  /objects/{objectID}/routes:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - objects
+      operationId: listObjectRoutes
+      summary: List the routes an object drove in a time range
+      description: >-
+        Returns the trips an object drove between `from` and `to`, which are
+        both required. Addresses and individual positions are returned only
+        when requested.
+      parameters:
+        - $ref: '#/components/parameters/FromDateTime'
+        - $ref: '#/components/parameters/ToDateTime'
+        - name: includeAddresses
+          in: query
+          required: false
+          description: Resolve the start and end addresses.
+          schema:
+            type: boolean
+            default: false
+        - name: includePoints
+          in: query
+          required: false
+          description: Include every recorded position along the route.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Routes'
+        '400':
+          description: >-
+            Invalid object id, a missing or non-RFC3339 `from`/`to`, `from`
+            after `to`, or a non-boolean flag.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingRange:
+                  value:
+                    code: BAD_REQUEST
+                    message: from is required
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+  /objects/alerts:
+    get:
+      tags:
+        - alerts
+      operationId: listAlerts
+      summary: List alerts for all objects in a time range
+      description: >-
+        Not yet available; planned for a later release.
+
+
+        Returns alerts raised on any of your objects, optionally narrowed by
+        `from` and `to`.
+      parameters:
+        - name: from
+          in: query
+          required: false
+          description: Start of the time range, RFC 3339.
+          schema:
+            type: string
+            format: date-time
+            example: '2026-08-01T00:00:00Z'
+        - name: to
+          in: query
+          required: false
+          description: End of the time range, RFC 3339.
+          schema:
+            type: string
+            format: date-time
+            example: '2026-08-07T23:59:59Z'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alerts'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+  /objects/{objectID}/alerts:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - alerts
+      operationId: listObjectAlerts
+      summary: List alerts for one object in a time range
+      description: >-
+        Not yet available; planned for a later release.
+
+
+        Returns alerts raised on one object, optionally narrowed by `from` and
+        `to`.
+      parameters:
+        - name: from
+          in: query
+          required: false
+          description: Start of the time range, RFC 3339.
+          schema:
+            type: string
+            format: date-time
+            example: '2026-08-01T00:00:00Z'
+        - name: to
+          in: query
+          required: false
+          description: End of the time range, RFC 3339.
+          schema:
+            type: string
+            format: date-time
+            example: '2026-08-07T23:59:59Z'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alerts'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+  /zones:
+    get:
+      tags:
+        - zones
+      operationId: listZones
+      summary: List zones
+      description: Returns your zones.
+      parameters:
+        - $ref: '#/components/parameters/IncludeGeometry'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Zones'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+    post:
+      tags:
+        - zones
+      operationId: createZone
+      summary: Create a zone
+      description: >-
+        `geometry` carries the shape named by `zoneType`: a Point for `circle`
+        (with `radius` in metres), a LineString for `polyline`, and a Polygon
+        for `polygon` and `rectangle`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZoneInput'
+            examples:
+              circle:
+                summary: Circle with a radius
+                value:
+                  zoneType: circle
+                  name: Depot
+                  color: '#ff0000'
+                  geometry:
+                    type: Point
+                    coordinates:
+                      - 23.3219
+                      - 42.6977
+                  radius: 250
+                  onMap: true
+              polygon:
+                summary: Closed polygon
+                value:
+                  zoneType: polygon
+                  name: Yard
+                  geometry:
+                    type: Polygon
+                    coordinates:
+                      - - - 23.32
+                          - 42.69
+                        - - 23.33
+                          - 42.69
+                        - - 23.33
+                          - 42.7
+                        - - 23.32
+                          - 42.7
+                        - - 23.32
+                          - 42.69
+      responses:
+        '201':
+          description: Zone created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Zone'
+        '400':
+          description: >-
+            Malformed body, or a shape the server rejected, for example a
+            `circle` with no `radius`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidBody:
+                  value:
+                    code: BAD_REQUEST
+                    message: invalid request body
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Your API key is not permitted to create zones.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                forbidden:
+                  value:
+                    code: FORBIDDEN
+                    message: not permitted to create zones
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+  /zones/search:
+    post:
+      tags:
+        - zones
+      operationId: searchZones
+      summary: List zones by id
+      description: Returns the zones matching the ids in the body.
+      parameters:
+        - $ref: '#/components/parameters/IncludeGeometry'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZoneSearchInput'
+            example:
+              zoneIDs:
+                - '5930'
+                - '14700'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Zones'
+        '400':
+          description: Malformed body, an empty `zoneIDs`, or an id that is not numeric.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingIDs:
+                  value:
+                    code: BAD_REQUEST
+                    message: zoneIDs is required
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+  /zones/{zoneID}:
+    parameters:
+      - $ref: '#/components/parameters/ZoneId'
+    get:
+      tags:
+        - zones
+      operationId: getZone
+      summary: Retrieve a single zone
+      parameters:
+        - $ref: '#/components/parameters/IncludeGeometry'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Zone'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/GenericError'
+        '503':
+          $ref: '#/components/responses/UnavailableError'
+components:
+  schemas:
+    PrimitiveType:
+      description: Primitive type of a parameter value.
+      type: string
+      enum:
+        - string
+        - number
+        - date
+        - file
+    ParameterDefinition:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - required
+        - readOnly
+      properties:
+        id:
+          description: >-
+            Stable identifier of the parameter. Match values by this; it does
+            not change when the display name is edited.
+          type: integer
+          format: int64
+          example: 1
+        name:
+          description: Display label. May change over time; do not use it as a key.
+          type: string
+          example: brand
+        type:
+          $ref: '#/components/schemas/PrimitiveType'
+        required:
+          description: Whether the parameter must be set on this object type.
+          type: boolean
+          example: true
+        readOnly:
+          description: True when the value cannot be changed.
+          type: boolean
+          example: false
+        values:
+          description: >-
+            The allowed values, for parameters that accept a fixed list. These
+            report `type: string`. Omitted for all other parameters.
+          type: array
+          items:
+            type: string
+      example:
+        id: 1
+        name: brand
+        type: string
+        required: true
+        readOnly: false
+        values:
+          - Renault
+          - Peugeot
+          - Ford
+    Parameter:
+      description: A parameter value on an object, matched to its definition by id.
+      type: object
+      required:
+        - id
+        - name
+        - value
+      properties:
+        id:
+          description: Matches ParameterDefinition.id.
+          type: integer
+          format: int64
+          example: 1
+        name:
+          description: Display label at read time.
+          type: string
+          example: brand
+        value:
+          description: >-
+            Always a string, whatever the declared type. Dates are
+            `YYYY-MM-DD`.
+          type: string
+          example: Renault
+      example:
+        id: 1
+        name: brand
+        value: Renault
+    ObjectType:
+      type: object
+      required:
+        - name
+        - parameters
+      properties:
+        name:
+          type: string
+          example: Vehicle
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParameterDefinition'
+      example:
+        name: Vehicle
+        parameters:
+          - id: 1
+            name: brand
+            type: string
+            required: true
+            readOnly: false
+            values:
+              - Renault
+              - Peugeot
+              - Ford
+          - id: 2
+            name: model
+            type: string
+            required: true
+            readOnly: false
+          - id: 3
+            name: license plate
+            type: string
+            required: false
+            readOnly: false
+    Object:
+      type: object
+      required:
+        - objectID
+        - objectType
+        - name
+        - tags
+        - parameters
+      properties:
+        objectID:
+          description: Identifier of the object, as a string.
+          type: string
+          example: '14574'
+        objectType:
+          description: Name of the object's type. Empty when the object has no type.
+          type: string
+          example: Vehicle
+        name:
+          type: string
+          example: Renault Clio
+        comment:
+          description: Free-form comment. Always present, may be null.
+          type: string
+          nullable: true
+          example: Priority delivery unit
+        tags:
+          description: Labels on the object.
+          type: array
+          items:
+            type: string
+          example:
+            - fleet
+            - europe
+        parameters:
+          description: Parameter values, matched to the object type's definitions by id.
+          type: array
+          items:
+            $ref: '#/components/schemas/Parameter'
+      example:
+        objectID: '14574'
+        objectType: Vehicle
+        name: Renault Clio
+        comment: Priority delivery unit
+        tags:
+          - fleet
+          - europe
+        parameters:
+          - id: 1
+            name: brand
+            value: Renault
+          - id: 2
+            name: model
+            value: Clio
+          - id: 3
+            name: license plate
+            value: CA0000CA
+    Location:
+      type: object
+      required:
+        - latitude
+        - longitude
+        - angle
+      properties:
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 42.691143
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: 23.352829
+        angle:
+          description: Heading in degrees.
+          type: number
+          format: double
+          minimum: 0
+          maximum: 360
+          example: 89
+    ObjectStatus:
+      type: object
+      required:
+        - objectID
+        - objectName
+        - lastUpdate
+        - location
+        - sensorData
+      properties:
+        objectID:
+          type: string
+          example: '14574'
+        objectName:
+          type: string
+          example: Renault Clio
+        lastUpdate:
+          description: Time of the last update. Null when the object has never reported.
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-09-09T14:44:38Z'
+        location:
+          description: Last known position. Null when the object has never reported.
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Location'
+        sensorData:
+          description: >-
+            Sensor readings by name. Values are always strings. The keys
+            available depend on the device.
+          type: object
+          additionalProperties:
+            type: string
+      example:
+        objectID: '14574'
+        objectName: Renault Clio
+        lastUpdate: '2026-09-09T14:44:38Z'
+        location:
+          latitude: 42.691143
+          longitude: 23.352829
+          angle: 89
+        sensorData:
+          altitude: '553'
+          key: key_off
+          km: '46371.8'
+          road_topology: urban
+          speed: '0'
+          speed_limit: '0'
+          total_odometer: '46371.800'
+    RoutePoint:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        eventTs:
+          type: string
+          format: date-time
+          example: '2026-08-01T07:12:44Z'
+        latitude:
+          type: number
+          format: double
+          example: 42.6977
+        longitude:
+          type: number
+          format: double
+          example: 23.3219
+    Route:
+      description: One trip driven by the object.
+      type: object
+      required:
+        - objectID
+        - startedAt
+        - endedAt
+        - aggregations
+      properties:
+        objectID:
+          type: string
+          example: '14574'
+        startedAt:
+          type: string
+          format: date-time
+          example: '2026-08-01T07:10:00Z'
+        endedAt:
+          description: Null while the route is still open.
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-08-01T08:02:13Z'
+        startAddress:
+          description: Only when `includeAddresses=true`.
+          type: string
+          example: 1 Vitosha Blvd, Sofia
+        endAddress:
+          description: Only when `includeAddresses=true`.
+          type: string
+          example: 25 Tsarigradsko Shose, Sofia
+        startPoint:
+          $ref: '#/components/schemas/RoutePoint'
+        endPoint:
+          $ref: '#/components/schemas/RoutePoint'
+        aggregations:
+          description: >-
+            Totals for the route, as strings. Keys are limited to: mileage,
+            duration, duration_moving, duration_idle, speed_max, speed_avg,
+            odometer_at_start, odometer_at_end, fuel_level_at_start,
+            fuel_level_at_end.
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            mileage: '42.7'
+            duration: '3133'
+            speed_max: '96'
+            speed_avg: '49.1'
+        dataPoints:
+          description: Only when `includePoints=true`.
+          type: array
+          items:
+            $ref: '#/components/schemas/RoutePoint'
+    ConditionASTNode:
+      description: >-
+        Condition expression as a tree. Logical nodes (NOT/AND/OR) carry
+        children; comparison nodes carry field, value and primitive instead;
+        zone operators carry only a value.
+      type: object
+      required:
+        - op
+      properties:
+        op:
+          type: string
+          enum:
+            - NOT
+            - AND
+            - OR
+            - EQ
+            - NOT_EQ
+            - LT
+            - LTE
+            - GT
+            - GTE
+            - STARTS_WITH
+            - NOT_STARTS_WITH
+            - CONTAINS
+            - NOT_CONTAINS
+            - IN_ZONE
+            - OUTSIDE_ZONE
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConditionASTNode'
+        field:
+          description: Name of a sensor reading, as it appears in `sensorData`.
+          type: string
+          example: speed
+        value:
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: array
+              items:
+                oneOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+        primitive:
+          type: string
+          enum:
+            - string
+            - boolean
+            - integer
+            - long
+            - float
+            - double
+            - n/a
+      additionalProperties: false
+    AlertRuleGroup:
+      description: A rule set that must hold for a duration.
+      type: object
+      required:
+        - durationSeconds
+        - rules
+      properties:
+        durationSeconds:
+          description: How long the rule must hold before it takes effect.
+          type: integer
+          minimum: 0
+          example: 60
+        rules:
+          $ref: '#/components/schemas/ConditionASTNode'
+    AlertRules:
+      description: The rule sets that raise and clear an alert.
+      type: object
+      required:
+        - trigger
+        - clear
+      properties:
+        trigger:
+          $ref: '#/components/schemas/AlertRuleGroup'
+        clear:
+          $ref: '#/components/schemas/AlertRuleGroup'
+    Alert:
+      type: object
+      required:
+        - eventID
+        - objectID
+        - reason
+        - definitionID
+        - triggeredAt
+        - sensorData
+        - rules
+      properties:
+        eventID:
+          description: Identifier of this alert event.
+          type: string
+          readOnly: true
+          example: 6b1e9c2a-f1cd-4748-9d6a-4f7a6e9b2c21
+        objectID:
+          type: string
+          example: '14574'
+        reason:
+          type: string
+          example: Engine over-temperature
+        definitionID:
+          description: Identifier of the alert definition that raised it.
+          type: string
+          example: def-vehicle-overheat
+        triggeredAt:
+          type: string
+          format: date-time
+          example: '2026-08-01T10:15:00Z'
+        clearedAt:
+          description: Null while the alert is still active.
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-08-01T10:45:30Z'
+        sensorData:
+          description: Sensor readings at the moment the alert was raised.
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            speed: '96'
+            speed_limit: '50'
+            road_topology: urban
+            km: '46371.8'
+        rules:
+          $ref: '#/components/schemas/AlertRules'
+      example:
+        eventID: 6b1e9c2a-f1cd-4748-9d6a-4f7a6e9b2c21
+        objectID: '14574'
+        reason: Speeding in an urban area
+        definitionID: def-urban-speeding
+        triggeredAt: '2026-09-09T14:44:38Z'
+        clearedAt: null
+        sensorData:
+          speed: '96'
+          speed_limit: '50'
+          road_topology: urban
+          km: '46371.8'
+        rules:
+          trigger:
+            durationSeconds: 60
+            rules:
+              op: AND
+              children:
+                - op: GT
+                  field: speed
+                  primitive: double
+                  value: 90
+                - op: EQ
+                  field: road_topology
+                  primitive: string
+                  value: urban
+          clear:
+            durationSeconds: 0
+            rules:
+              op: LTE
+              field: speed
+              primitive: double
+              value: 90
+    ZoneType:
+      description: >-
+        Shape of the zone. Selects which geometry it carries: `circle` a Point
+        with a radius, `polyline` a LineString, `polygon` and `rectangle` a
+        Polygon.
+      type: string
+      enum:
+        - circle
+        - polygon
+        - polyline
+        - rectangle
+    Geometry:
+      description: GeoJSON geometry. Positions are ordered `[longitude, latitude]`.
+      type: object
+      required:
+        - type
+        - coordinates
+      properties:
+        type:
+          type: string
+          enum:
+            - Point
+            - LineString
+            - Polygon
+        coordinates:
+          description: >-
+            `Point`: `[lon, lat]`. `LineString`: `[[lon, lat], ...]`. `Polygon`:
+            an array of rings, the first being the outer boundary, each closed
+            by repeating its first position.
+          oneOf:
+            - type: array
+              items:
+                type: number
+                format: double
+            - type: array
+              items:
+                type: array
+                items:
+                  type: number
+                  format: double
+            - type: array
+              items:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+                    format: double
+      example:
+        type: Point
+        coordinates:
+          - 23.3219
+          - 42.6977
+    Zone:
+      type: object
+      required:
+        - zoneID
+        - zoneType
+        - name
+        - color
+        - address
+        - tag
+        - onMap
+      properties:
+        zoneID:
+          type: string
+          example: '5930'
+        zoneType:
+          $ref: '#/components/schemas/ZoneType'
+        name:
+          type: string
+          nullable: true
+          example: Depot
+        color:
+          type: string
+          nullable: true
+          example: '#ff0000'
+        address:
+          type: string
+          nullable: true
+          example: 1 Vitosha Blvd, Sofia
+        tag:
+          type: string
+          nullable: true
+          example: depots
+        onMap:
+          description: Whether the zone is drawn on the map.
+          type: boolean
+          example: true
+        geometry:
+          description: Only when `includeGeometry=true`.
+          allOf:
+            - $ref: '#/components/schemas/Geometry'
+        radius:
+          description: Radius in metres. Circles only.
+          type: number
+          format: double
+          example: 250
+        buffer:
+          description: Buffer in metres around a polyline.
+          type: number
+          format: double
+          example: 30
+    ZoneInput:
+      description: Body of a create request.
+      type: object
+      required:
+        - zoneType
+        - geometry
+      properties:
+        zoneType:
+          $ref: '#/components/schemas/ZoneType'
+        geometry:
+          $ref: '#/components/schemas/Geometry'
+        name:
+          type: string
+          nullable: true
+          example: Depot
+        color:
+          type: string
+          nullable: true
+          example: '#ff0000'
+        address:
+          type: string
+          nullable: true
+          example: 1 Vitosha Blvd, Sofia
+        tag:
+          type: string
+          nullable: true
+          example: depots
+        radius:
+          description: Required for `circle`. Metres.
+          type: number
+          format: double
+          nullable: true
+          example: 250
+        buffer:
+          description: Buffer in metres around a polyline.
+          type: number
+          format: double
+          nullable: true
+          example: 30
+        onMap:
+          type: boolean
+          default: false
+          example: true
+    ZoneSearchInput:
+      type: object
+      required:
+        - zoneIDs
+      properties:
+        zoneIDs:
+          description: Zone ids to return. Must not be empty.
+          type: array
+          items:
+            type: string
+          example:
+            - '5930'
+            - '14700'
+    Objects:
+      type: array
+      items:
+        $ref: '#/components/schemas/Object'
+    ObjectTypes:
+      type: array
+      items:
+        $ref: '#/components/schemas/ObjectType'
+    ObjectStatuses:
+      type: array
+      items:
+        $ref: '#/components/schemas/ObjectStatus'
+    Routes:
+      type: array
+      items:
+        $ref: '#/components/schemas/Route'
+    Zones:
+      type: array
+      items:
+        $ref: '#/components/schemas/Zone'
+    Alerts:
+      type: array
+      items:
+        $ref: '#/components/schemas/Alert'
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          description: >-
+            Stable error code: BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND,
+            INTERNAL_ERROR or SERVICE_UNAVAILABLE.
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: object not found
+        traceId:
+          description: Correlation id, when one was assigned.
+          type: string
+          example: 7b3c7e7e6f2a4ed1a9d9a1f94b0b2c91
+  responses:
+    BadRequestError:
+      description: The request could not be parsed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            invalidId:
+              value:
+                code: BAD_REQUEST
+                message: invalid object id
+    UnauthorizedError:
+      description: '`X-API-Key` is missing, not recognised, revoked or expired.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            missingKey:
+              value:
+                code: UNAUTHORIZED
+                message: missing api key
+            unknownKey:
+              value:
+                code: UNAUTHORIZED
+                message: api key not recognised
+    NotFoundError:
+      description: The requested resource does not exist or is not available to you.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            notFound:
+              value:
+                code: NOT_FOUND
+                message: object not found
+    GenericError:
+      description: Unexpected server error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            internal:
+              value:
+                code: INTERNAL_ERROR
+                message: internal server error
+    UnavailableError:
+      description: The service is temporarily unavailable. Retry the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            unavailable:
+              value:
+                code: SERVICE_UNAVAILABLE
+                message: service temporarily unavailable
+  parameters:
+    ObjectId:
+      name: objectID
+      in: path
+      required: true
+      description: Identifier of the object.
+      schema:
+        type: string
+        example: '14574'
+    ZoneId:
+      name: zoneID
+      in: path
+      required: true
+      description: Identifier of the zone.
+      schema:
+        type: string
+        example: '5930'
+    IncludeGeometry:
+      name: includeGeometry
+      in: query
+      required: false
+      description: Include each zone's geometry. Omitted by default.
+      schema:
+        type: boolean
+        default: false
+    FromDateTime:
+      name: from
+      in: query
+      required: true
+      description: Start of the time range, RFC 3339.
+      schema:
+        type: string
+        format: date-time
+        example: '2026-08-01T00:00:00Z'
+    ToDateTime:
+      name: to
+      in: query
+      required: true
+      description: End of the time range, RFC 3339. Must not be before `from`.
+      schema:
+        type: string
+        format: date-time
+        example: '2026-08-07T23:59:59Z'
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      name: X-API-Key
+      in: header
+      description: The API key issued to you.
+security:
+  - apiKey: []
+tags:
+  - name: objects
+    description: Objects, their live status and the routes they drove
+  - name: object-types
+    description: Object type definitions used for object parameter schemas
+  - name: zones
+    description: Geographic zones
+  - name: alerts
+    description: Alerts raised against objects
