@@ -23,8 +23,12 @@ use Ux2Dev\GpsBulgaria\GpsBulgaria;
  */
 final class GpsBulgariaManager
 {
-    /** @var array<string, GpsBulgaria> */
-    private array $instances = [];
+    /**
+     * Shared by reference with tenant() clones, so each tenant is built once.
+     *
+     * @var \ArrayObject<string, GpsBulgaria>
+     */
+    private readonly \ArrayObject $instances;
 
     private string $currentTenant;
 
@@ -35,6 +39,9 @@ final class GpsBulgariaManager
         private readonly ?RequestFactoryInterface $requestFactory = null,
         private readonly ?StreamFactoryInterface $streamFactory = null,
     ) {
+        /** @var \ArrayObject<string, GpsBulgaria> $instances */
+        $instances = new \ArrayObject;
+        $this->instances = $instances;
         $default = $config['default'] ?? 'main';
         $this->currentTenant = is_string($default) ? $default : 'main';
     }
@@ -54,7 +61,11 @@ final class GpsBulgariaManager
 
     public function client(): GpsBulgaria
     {
-        return $this->instances[$this->currentTenant] ??= $this->make($this->configFor($this->tenantConfig($this->currentTenant)));
+        if (! isset($this->instances[$this->currentTenant])) {
+            $this->instances[$this->currentTenant] = $this->make($this->configFor($this->tenantConfig($this->currentTenant)));
+        }
+
+        return $this->instances[$this->currentTenant];
     }
 
     /**
@@ -65,7 +76,7 @@ final class GpsBulgariaManager
      *
      * @param  array<string, mixed>  $overrides  Keys: base_url, timeout, retry.
      */
-    public function forKey(string $apiKey, array $overrides = []): GpsBulgaria
+    public function forKey(#[\SensitiveParameter] string $apiKey, array $overrides = []): GpsBulgaria
     {
         $tenants = $this->config['tenants'] ?? [];
         $default = $this->config['default'] ?? 'main';

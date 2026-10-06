@@ -26,7 +26,7 @@ final readonly class GpsObject implements Hydratable
 
     public static function fromArray(array $data): static
     {
-        $type = Data::nullableString($data, 'objectType', 'GpsObject');
+        $type = Data::string($data, 'objectType', 'GpsObject');
 
         return new self(
             objectId: Data::string($data, 'objectID', 'GpsObject'),

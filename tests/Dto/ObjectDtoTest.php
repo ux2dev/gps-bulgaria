@@ -75,3 +75,10 @@ it('rejects an unknown parameter type', function () {
     expect(fn () => ObjectType::fromArray($data))
         ->toThrow(InvalidResponseException::class, "ParameterDefinition: field 'type' has unknown PrimitiveType value 'geopoint'");
 });
+
+it('requires the objectType key', function () {
+    $data = api_fixture('object');
+    unset($data['objectType']);
+
+    expect(fn () => GpsObject::fromArray($data))->toThrow(InvalidResponseException::class);
+});

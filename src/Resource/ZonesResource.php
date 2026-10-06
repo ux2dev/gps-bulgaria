@@ -40,7 +40,7 @@ final class ZonesResource
     /**
      * POST /zones/search: the zones matching the given ids.
      *
-     * @param  list<string>  $zoneIds
+     * @param  array<array-key, string>  $zoneIds
      * @return list<Zone>
      */
     public function search(array $zoneIds, bool $includeGeometry = false): array
@@ -53,7 +53,7 @@ final class ZonesResource
             'POST',
             '/zones/search',
             ['includeGeometry' => $includeGeometry],
-            ['zoneIDs' => $zoneIds],
+            ['zoneIDs' => array_values($zoneIds)],
         );
 
         return array_map(Zone::fromArray(...), Data::rows($rows, 'Zone'));

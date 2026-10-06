@@ -72,6 +72,14 @@ it('describes an empty error body by status', function () {
     expect($e->getMessage())->toBe('HTTP 500')->and($e->body)->toBe([]);
 });
 
+it('falls back to the status description when the error message is empty', function () {
+    $http = new FakeHttpClient([FakeHttpClient::json(500, ['message' => ''])]);
+
+    $e = catchApi(fn () => transport($http)->request('GET', '/objects'));
+
+    expect($e->getMessage())->toBe('HTTP 500: {"message":""}');
+});
+
 it('keeps a JSON error body that lacks the documented shape', function () {
     $http = new FakeHttpClient([FakeHttpClient::json(500, ['error' => 'boom'])]);
 

@@ -162,7 +162,7 @@ final class Transport
         $decoded = json_decode($raw, true);
         $body = is_array($decoded) ? $decoded : [];
 
-        $message = isset($body['message']) && is_string($body['message'])
+        $message = isset($body['message']) && is_string($body['message']) && $body['message'] !== ''
             ? $body['message']
             : ($raw === '' ? "HTTP {$status}" : "HTTP {$status}: ".self::excerpt($raw));
 

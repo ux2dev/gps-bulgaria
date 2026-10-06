@@ -12,3 +12,7 @@ it('encodes a path segment', function () {
 it('rejects empty and blank ids before a request is built', function (string $id) {
     expect(fn () => Path::segment($id, 'objectId'))->toThrow(InvalidArgumentException::class, 'objectId must not be empty');
 })->with(['', '   ']);
+
+it('rejects dot-segment ids, which HTTP clients would normalise away', function (string $id) {
+    expect(fn () => Path::segment($id, 'objectId'))->toThrow(InvalidArgumentException::class, "objectId must not be '.' or '..'");
+})->with(['.', '..', ' . ', ' .. ']);

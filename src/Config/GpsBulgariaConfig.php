@@ -14,7 +14,7 @@ final readonly class GpsBulgariaConfig
     public string $baseUrl;
 
     public function __construct(
-        private string $apiKey,
+        #[\SensitiveParameter] private string $apiKey,
         string $baseUrl = self::DEFAULT_BASE_URL,
         public int $timeout = 30,
         public RetryPolicy $retry = new RetryPolicy,

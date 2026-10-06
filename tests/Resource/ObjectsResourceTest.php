@@ -23,10 +23,17 @@ it('lists objects', function () {
 it('gets one object with an encoded id', function () {
     $http = new FakeHttpClient([FakeHttpClient::json(200, api_fixture('object'))]);
 
-    $object = gps($http)->objects()->get('14574');
+    $object = gps($http)->objects()->get('a/b');
 
     expect($object->objectId)->toBe('14574')
-        ->and((string) $http->captured[0]->getUri())->toBe('https://iot.gps.bg/api/v2/objects/14574');
+        ->and((string) $http->captured[0]->getUri())->toBe('https://iot.gps.bg/api/v2/objects/a%2Fb');
+});
+
+it('rejects a dot-segment object id before sending', function () {
+    $http = new FakeHttpClient;
+
+    expect(fn () => gps($http)->objects()->get('.'))->toThrow(InvalidArgumentException::class, "objectId must not be '.' or '..'");
+    expect($http->captured)->toBe([]);
 });
 
 it('surfaces a 404 as NotFoundException', function () {

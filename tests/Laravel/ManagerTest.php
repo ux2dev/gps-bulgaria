@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use GuzzleHttp\Psr7\HttpFactory;
+use Ux2Dev\GpsBulgaria\Config\GpsBulgariaConfig;
 use Ux2Dev\GpsBulgaria\Exception\ConfigurationException;
 use Ux2Dev\GpsBulgaria\GpsBulgaria;
 use Ux2Dev\GpsBulgaria\Laravel\GpsBulgariaManager;
@@ -21,7 +22,7 @@ function tenants(): array
     return [
         'default' => 'main',
         'tenants' => [
-            'main' => ['api_key' => 'key_main', 'timeout' => 30, 'retry' => 1],
+            'main' => ['api_key' => 'key_main', 'base_url' => 'https://staging.example.test/api/v2', 'timeout' => 7, 'retry' => 3],
             'other' => ['api_key' => 'key_other', 'base_url' => 'https://staging.example.test/api/v2'],
             'blank' => ['api_key' => ''],
         ],
@@ -62,6 +63,13 @@ it('rejects unknown tenants and tenants without a key', function () {
         ->and(fn () => $m->tenant('blank')->client())->toThrow(ConfigurationException::class, 'apiKey must not be empty');
 });
 
+function client_config(GpsBulgaria $client): GpsBulgariaConfig
+{
+    $transport = (new ReflectionProperty($client, 'transport'))->getValue($client);
+
+    return (new ReflectionProperty($transport, 'config'))->getValue($transport);
+}
+
 it('builds an uncached client for a runtime key, inheriting default settings', function () {
     $http = new FakeHttpClient([FakeHttpClient::json(200, []), FakeHttpClient::json(200, [])]);
     $m = manager($http, tenants());
@@ -69,13 +77,31 @@ it('builds an uncached client for a runtime key, inheriting default settings', f
     $a = $m->forKey('customer-key');
     $b = $m->forKey('customer-key');
     $a->objects()->list();
-    $m->forKey('customer-key-2', ['base_url' => 'https://staging.example.test/api/v2'])->objects()->list();
+    $m->forKey('customer-key-2', ['base_url' => 'https://override.example.test/api/v2'])->objects()->list();
 
     expect($a)->not->toBe($b)
         ->and($http->captured[0]->getHeaderLine('X-API-Key'))->toBe('customer-key')
-        ->and((string) $http->captured[0]->getUri())->toBe('https://iot.gps.bg/api/v2/objects')
+        ->and((string) $http->captured[0]->getUri())->toBe('https://staging.example.test/api/v2/objects')
         ->and($http->captured[1]->getHeaderLine('X-API-Key'))->toBe('customer-key-2')
-        ->and((string) $http->captured[1]->getUri())->toBe('https://staging.example.test/api/v2/objects');
+        ->and((string) $http->captured[1]->getUri())->toBe('https://override.example.test/api/v2/objects');
+});
+
+it('forKey inherits timeout and retry from the default tenant, and overrides win', function () {
+    $m = manager(new FakeHttpClient, tenants());
+    $inherited = client_config($m->forKey('k'));
+    $overridden = client_config($m->forKey('k', ['timeout' => 2, 'retry' => 5]));
+
+    expect($inherited->timeout)->toBe(7)
+        ->and($inherited->retry->maxAttempts)->toBe(3)
+        ->and($overridden->timeout)->toBe(2)
+        ->and($overridden->retry->maxAttempts)->toBe(5);
+});
+
+it('caches non-default tenant clients across tenant() calls', function () {
+    $m = manager(new FakeHttpClient, tenants());
+
+    expect($m->tenant('other')->client())->toBe($m->tenant('other')->client())
+        ->and($m->tenant('other')->client())->not->toBe($m->client());
 });
 
 it('lets forKey work without any configured tenants', function () {

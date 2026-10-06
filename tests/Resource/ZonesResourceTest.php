@@ -37,6 +37,14 @@ it('searches zones by id with a JSON body', function () {
         ->and((string) $r->getBody())->toBe('{"zoneIDs":["5930","14700"]}');
 });
 
+it('sends a non-list id array as a JSON list', function () {
+    $http = new FakeHttpClient([FakeHttpClient::json(200, [api_fixture('zone')])]);
+
+    gps($http)->zones()->search([0 => '5930', 2 => '14700']);
+
+    expect((string) $http->captured[0]->getBody())->toBe('{"zoneIDs":["5930","14700"]}');
+});
+
 it('rejects an empty search before sending', function () {
     $http = new FakeHttpClient;
 

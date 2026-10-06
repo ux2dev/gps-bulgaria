@@ -33,7 +33,7 @@ use Ux2Dev\GpsBulgaria\GpsBulgaria;
 
 $factory = new HttpFactory();
 $gps = new GpsBulgaria(
-    new GpsBulgariaConfig(apiKey: getenv('GPS_BULGARIA_API_KEY')),
+    new GpsBulgariaConfig(apiKey: (string) getenv('GPS_BULGARIA_API_KEY')),
     new Client(['timeout' => 30]),
     $factory,
     $factory,
@@ -57,6 +57,8 @@ use Ux2Dev\GpsBulgaria\Laravel\Facades\GpsBulgaria;
 
 $objects = GpsBulgaria::objects()->list();
 ```
+
+If your app binds `Psr\Http\Client\ClientInterface` in the container, that client is used for every tenant, so the per-tenant `timeout` must then be set on your client.
 
 ## Configuration
 
@@ -101,7 +103,7 @@ $gps->objects()->list();
 new GpsBulgariaConfig(apiKey: $key, retry: RetryPolicy::attempts(3));
 ```
 
-Retries apply only to **GET** requests, and only when the API returns `503` or the connection fails. Delays use exponential backoff with full jitter (200 ms base, 2 s cap by default), and a `Retry-After` header is honoured. `POST` requests (`zones()->create()`, `zones()->search()`) are never retried.
+Retries apply only to **GET** requests, and only when the API returns `503` or the connection fails. Delays use exponential backoff with full jitter (200 ms base, 2 s cap by default), and a `Retry-After` header (in seconds) is honoured, capped at `maxDelayMs`. `POST` requests (`zones()->create()`, `zones()->search()`) are never retried.
 
 ## Resources
 

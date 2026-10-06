@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Support\ServiceProvider;
+use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Ux2Dev\GpsBulgaria\GpsBulgaria;
 use Ux2Dev\GpsBulgaria\Laravel\Facades\GpsBulgaria as GpsBulgariaFacade;
 use Ux2Dev\GpsBulgaria\Laravel\GpsBulgariaManager;
 use Ux2Dev\GpsBulgaria\Laravel\GpsBulgariaServiceProvider;
 use Ux2Dev\GpsBulgaria\Resource\ZonesResource;
+use Ux2Dev\GpsBulgaria\Tests\Support\FakeHttpClient;
 
 it('registers the manager as a singleton with an alias', function () {
     expect(app(GpsBulgariaManager::class))->toBe(app('gps-bulgaria'))
@@ -37,4 +39,16 @@ it('publishes the config file under the gps-bulgaria-config tag', function () {
     );
 
     expect(array_values($paths))->toBe([config_path('gps-bulgaria.php')]);
+});
+
+it('uses a PSR-18 client bound in the container', function () {
+    $http = new FakeHttpClient([FakeHttpClient::json(200, [])]);
+    app()->instance(ClientInterface::class, $http);
+    app()->forgetInstance(GpsBulgariaManager::class);
+
+    GpsBulgariaFacade::clearResolvedInstances();
+    GpsBulgariaFacade::objects()->list();
+
+    expect($http->captured)->toHaveCount(1)
+        ->and($http->captured[0]->getHeaderLine('X-API-Key'))->toBe('key_main');
 });
